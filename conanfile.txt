@@ -1,0 +1,11 @@
+[requires]
+gtest/1.8.0@lasote/stable
+
+[generators]
+cmake
+
+# Below is to link shared libraries with the binaries in CLion.
+# If you are using different setup, just point libraries to the binary folder.
+[imports]
+bin, *.dll -> ../cmake-build-debug/bin/
+lib, *.dylib -> ../cmake-build-debug/bin/
