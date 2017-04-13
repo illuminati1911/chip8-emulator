@@ -10,7 +10,15 @@ int main(int argc, char** argv) {
     return RUN_ALL_TESTS();
 }
 
-TEST(JustFunTest, First) {
+TEST(TestProgramMemoryLoading, TEST_MEMORY) {
     cpu c;
+    c.init();
+    c.load("PONG");
     EXPECT_EQ(50, 50);
 }
+
+// TOO LARGE FILE
+
+// OK SIZE FILE
+
+// ZERO SIZE FILE

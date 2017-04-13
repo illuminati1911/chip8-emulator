@@ -28,9 +28,6 @@ class cpu {
         // FONT SET
         unsigned char m_fontset[CHIP8_FONTSET_SIZE];
 
-        // RENDERING BUFFER
-        unsigned char m_gfx_buffer[CHIP8_GFX_RESOLUTION];
-
         // TIMERS
         unsigned char m_delay_timer;
         unsigned char m_audio_timer;
@@ -39,10 +36,13 @@ class cpu {
         unsigned short m_stack[CHIP8_STACK_LEVELS];
         unsigned short m_stack_pointer;
 
+    public:
+        // RENDERING BUFFER
+        bool m_drawFlag;
+        unsigned char m_gfx_buffer[CHIP8_GFX_RESOLUTION];
+
         // KEYBOARD 0x0 -> 0xF
         unsigned char m_keyboard[16];
-    public:
-        bool m_drawFlag;
 
         void init();
         bool load(const char *filename);
