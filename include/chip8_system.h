@@ -2,8 +2,8 @@
 // Created by Ville Välimaa on 08/04/2017.
 //
 
-#ifndef CHIP8_EMULATOR_CPU_H
-#define CHIP8_EMULATOR_CPU_H
+#ifndef CHIP8_EMULATOR_CHIP8_SYSTEM_H
+#define CHIP8_EMULATOR_CHIP8_SYSTEM_H
 #define CHIP8_MEMORY_SIZE 4096
 #define CHIP8_CPU_REGISTER_COUNT 16
 #define CHIP8_GFX_RESOLUTION 64 * 32
@@ -12,7 +12,7 @@
 #define CHIP8_PROGRAM_MEMORY_START 512
 
 
-class cpu {
+class chip8_system {
     private:
         /*
          * MEMORY MAP:
@@ -46,9 +46,9 @@ class cpu {
 
         void init();
         bool load(const char *filename);
-        void cycle();
+        void cpuCycle();
         void setKeys();
 };
 
 
-#endif //CHIP8_EMULATOR_CPU_H
+#endif //CHIP8_EMULATOR_CHIP8_SYSTEM_H

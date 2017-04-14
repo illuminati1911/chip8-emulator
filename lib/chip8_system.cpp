@@ -5,10 +5,10 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
-#include "cpu.h"
+#include "chip8_system.h"
 #include "utils.h"
 
-void cpu::init()
+void chip8_system::init()
 {
     // FONTSET
     const unsigned char chip8_fontset[CHIP8_FONTSET_SIZE] = {
@@ -53,7 +53,7 @@ void cpu::init()
         m_memory[i] = chip8_fontset[i];
 }
 
-bool cpu::load(const char *filename)
+bool chip8_system::load(const char *filename)
 {
     std::ifstream file(filename, std::ios::in
                                | std::ios::binary
@@ -84,17 +84,20 @@ bool cpu::load(const char *filename)
         m_memory[CHIP8_PROGRAM_MEMORY_START + i] = program_buffer[i];
 
     delete[] program_buffer;
-
     utils::PRINT_CHIP8_LOG("PROGRAM SUCCESSFULLY LOADED!");
     return true;
 }
 
-void cpu::cycle()
+void chip8_system::cpuCycle()
 {
+    // FETCH OPCODE
+    m_opcode = m_memory[m_pc] << 8 | m_memory[m_pc + 1];
 
+    // IN NO JUMP OR CALL IF SKIP INCREMENT BY FOUR
+    m_pc += 2;
 }
 
-void cpu::setKeys()
+void chip8_system::setKeys()
 {
 
 }

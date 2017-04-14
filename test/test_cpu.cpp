@@ -3,7 +3,7 @@
 //
 
 #include "gtest/gtest.h"
-#include "cpu.h"
+#include "chip8_system.h"
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);
