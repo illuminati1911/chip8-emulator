@@ -11,7 +11,6 @@
 #define CHIP8_FONTSET_SIZE 80
 #define CHIP8_PROGRAM_MEMORY_START 512
 
-
 class chip8_system {
     private:
         /*
@@ -35,6 +34,29 @@ class chip8_system {
         // STACK
         unsigned short m_stack[CHIP8_STACK_LEVELS];
         unsigned short m_stack_pointer;
+
+        // CPU INSTRUCTIONS & JUMP TABLE
+        typedef void (chip8_system::*cpu_instr)();
+        cpu_instr m_CPU_JUMP_TABLE[16];
+
+        void cpu_0x0XXX();
+        void cpu_0x1XXX();
+        void cpu_0x2XXX();
+        void cpu_0x3XXX();
+        void cpu_0x4XXX();
+        void cpu_0x5XXX();
+        void cpu_0x6XXX();
+        void cpu_0x7XXX();
+        void cpu_0x8XXX();
+        void cpu_0x9XXX();
+        void cpu_0xAXXX();
+        void cpu_0xBXXX();
+        void cpu_0xCXXX();
+        void cpu_0xDXXX();
+        void cpu_0xEXXX();
+        void cpu_0xFXXX();
+
+
 
     public:
         // RENDERING BUFFER
