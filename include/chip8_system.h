@@ -21,7 +21,7 @@ class chip8_system {
         unsigned short m_opcode;
         unsigned char m_memory[CHIP8_MEMORY_SIZE];
         unsigned char m_V[CHIP8_CPU_REGISTER_COUNT];
-        unsigned short m_i;
+        unsigned short m_I;
         unsigned short m_pc;
 
         // FONT SET
@@ -35,9 +35,11 @@ class chip8_system {
         unsigned short m_stack[CHIP8_STACK_LEVELS];
         unsigned short m_stack_pointer;
 
-        // CPU INSTRUCTIONS & JUMP TABLE
+        // CPU INSTRUCTIONS & JUMP TABLES
         typedef void (chip8_system::*cpu_instr)();
         cpu_instr m_CPU_JUMP_TABLE[16];
+        cpu_instr m_CPU_SUBINSTR_0x0XXX_TABLE[16];
+        cpu_instr m_CPU_SUBINSTR_0x8XXX_TABLE[16];
 
         void cpu_0x0XXX();
         void cpu_0x1XXX();
@@ -56,6 +58,18 @@ class chip8_system {
         void cpu_0xEXXX();
         void cpu_0xFXXX();
 
+        void cpu_sub_0x0000();
+        void cpu_sub_0x000E();
+
+        void cpu_sub_0x8XY0();
+        void cpu_sub_0x8XY1();
+        void cpu_sub_0x8XY2();
+        void cpu_sub_0x8XY3();
+        void cpu_sub_0x8XY4();
+        void cpu_sub_0x8XY5();
+        void cpu_sub_0x8XY6();
+        void cpu_sub_0x8XY7();
+        void cpu_sub_0x8XYE();
 
 
     public:
