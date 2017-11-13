@@ -159,19 +159,25 @@ void chip8_system::cpu_0x2XXX() {
 // 0x3XNN: Skips the next instruction if VX equals NN. (Usually the next instruction is a jump to skip a code block)
 void chip8_system::cpu_0x3XXX() {
     utils::PRINT_CHIP8_LOG("3");
-    m_V[(m_opcode & 0x0F00) >> 8] == (m_opcode & 0x00FF) ? m_pc += 4 : m_pc += 2;
+    m_V[(m_opcode & 0x0F00) >> 8] == (m_opcode & 0x00FF)
+        ? m_pc += 4
+        : m_pc += 2;
 }
 
 // 0x4XNN: Skips the next instruction if VX doesn't equal NN. (Usually the next instruction is a jump to skip a code block)
 void chip8_system::cpu_0x4XXX() {
     utils::PRINT_CHIP8_LOG("4");
-    m_V[(m_opcode & 0x0F00) >> 8] == (m_opcode & 0x00FF) ? m_pc += 2 : m_pc += 4;
+    m_V[(m_opcode & 0x0F00) >> 8] == (m_opcode & 0x00FF)
+        ? m_pc += 2
+        : m_pc += 4;
 }
 
 // 0x5XY0: Skips the next instruction if VX equals VY. (Usually the next instruction is a jump to skip a code block)
 void chip8_system::cpu_0x5XXX() {
     utils::PRINT_CHIP8_LOG("5");
-    m_V[(m_opcode & 0x0F00) >> 8] == m_V[(m_opcode & 0x00F0) >> 4] ? m_pc += 4 : m_pc += 2;
+    m_V[(m_opcode & 0x0F00) >> 8] == m_V[(m_opcode & 0x00F0) >> 4]
+        ? m_pc += 4
+        : m_pc += 2;
 }
 
 // 0x6XNN: Sets VX to NN

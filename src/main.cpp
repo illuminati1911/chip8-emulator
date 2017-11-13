@@ -1,6 +1,7 @@
 #include <iostream>
 #include <chip8_system.h>
 #include <thread>
+#include "SDL.h"
 
 int main(int argc, char** argv) {
     chip8_system chip8;

@@ -2,7 +2,7 @@
 // Created by Ville Välimaa on 08/04/2017.
 //
 
-#include "gtest/gtest.h"
+//#include "gtest/gtest.h"
 #include "chip8_system.h"
 
 int main(int argc, char** argv) {
