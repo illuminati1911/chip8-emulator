@@ -110,25 +110,24 @@ bool chip8_system::load(const char *filename)
 
     // READ ROM TO BUFFER
     std::streampos size = file.tellg();
-    //unsigned char *program_buffer = new unsigned char[size]; // TODO: CHECK IF NEEDED AT ALL
+    unsigned char *program_buffer = new unsigned char[size];
     file.seekg(0, std::ios::beg);
-    file.read((char *)m_memory, size);
+    file.read((char *)program_buffer, size);
     file.close();
     printf("SIZE OF THE ROM IS %llu\n", (unsigned long long)size);
 
     // VERIFY THAT ROM FITS TO CHIP-8 MEMORY
     if (!utils::VERIFY_CHIP8_ROM_FIT(&size, CHIP8_MEMORY_SIZE))
     {
-        //delete[] program_buffer;
+        delete[] program_buffer;
         return false;
     }
 
-    // TODO: CHECK IF NEEDED AT ALL
     // WRITE BUFFER TO EMULATOR MEMORY
-    //for (int i = 0; i < size; i ++)
-    //    m_memory[CHIP8_PROGRAM_MEMORY_START + i] = program_buffer[i];
+    for (int i = 0; i < size; i ++)
+        m_memory[CHIP8_PROGRAM_MEMORY_START + i] = program_buffer[i];
 
-    //delete[] program_buffer; // TODO: CHECK IF NEEDED AT ALL
+    delete[] program_buffer;
     utils::PRINT_CHIP8_LOG("PROGRAM SUCCESSFULLY LOADED!");
     return true;
 }

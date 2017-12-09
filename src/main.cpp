@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
     // and input
 
     chip8.init();
-    chip8.load("PONG");
+    chip8.load("roms/PONG");
 
     for(;;)
     {
