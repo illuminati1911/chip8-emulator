@@ -1,6 +1,16 @@
 //
 // Created by Ville Välimaa on 08/04/2017.
 //
+//
+//
+// ██████╗██╗  ██╗██╗██████╗      █████╗     ███████╗███╗   ███╗██╗   ██╗██╗      █████╗ ████████╗ ██████╗ ██████╗
+//██╔════╝██║  ██║██║██╔══██╗    ██╔══██╗    ██╔════╝████╗ ████║██║   ██║██║     ██╔══██╗╚══██╔══╝██╔═══██╗██╔══██╗
+//██║     ███████║██║██████╔╝    ╚█████╔╝    █████╗  ██╔████╔██║██║   ██║██║     ███████║   ██║   ██║   ██║██████╔╝
+//██║     ██╔══██║██║██╔═══╝     ██╔══██╗    ██╔══╝  ██║╚██╔╝██║██║   ██║██║     ██╔══██║   ██║   ██║   ██║██╔══██╗
+//╚██████╗██║  ██║██║██║         ╚█████╔╝    ███████╗██║ ╚═╝ ██║╚██████╔╝███████╗██║  ██║   ██║   ╚██████╔╝██║  ██║
+// ╚═════╝╚═╝  ╚═╝╚═╝╚═╝          ╚════╝     ╚══════╝╚═╝     ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝
+//
+//
 
 #ifndef CHIP8_EMULATOR_CHIP8_SYSTEM_H
 #define CHIP8_EMULATOR_CHIP8_SYSTEM_H
@@ -37,9 +47,11 @@ class chip8_system {
 
         // CPU INSTRUCTIONS & JUMP TABLES
         typedef void (chip8_system::*cpu_instr)();
-        cpu_instr m_CPU_JUMP_TABLE[16];
-        cpu_instr m_CPU_SUBINSTR_0x0XXX_TABLE[16];
-        cpu_instr m_CPU_SUBINSTR_0x8XXX_TABLE[16];
+        cpu_instr m_CPU_JUMP_TABLE[0x10];
+        cpu_instr m_CPU_SUBINSTR_0x0XXX_TABLE[0x10];
+        cpu_instr m_CPU_SUBINSTR_0x8XXX_TABLE[0x10];
+        cpu_instr m_CPU_SUBINSTR_0xEXXX_TABLE[0xA2];
+        cpu_instr m_CPU_SUBINSTR_0xFXXX_TABLE[0x66];
 
         void cpu_0x0XXX();
         void cpu_0x1XXX();
@@ -60,7 +72,6 @@ class chip8_system {
 
         void cpu_sub_0x0000();
         void cpu_sub_0x000E();
-
         void cpu_sub_0x8XY0();
         void cpu_sub_0x8XY1();
         void cpu_sub_0x8XY2();
@@ -70,7 +81,17 @@ class chip8_system {
         void cpu_sub_0x8XY6();
         void cpu_sub_0x8XY7();
         void cpu_sub_0x8XYE();
-
+        void cpu_sub_0xEX9E();
+        void cpu_sub_0xEXA1();
+        void cpu_sub_0xFX07();
+        void cpu_sub_0xFX0A();
+        void cpu_sub_0xFX15();
+        void cpu_sub_0xFX18();
+        void cpu_sub_0xFX1E();
+        void cpu_sub_0xFX29();
+        void cpu_sub_0xFX33();
+        void cpu_sub_0xFX55();
+        void cpu_sub_0xFX65();
 
     public:
         // RENDERING BUFFER

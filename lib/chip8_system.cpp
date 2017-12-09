@@ -61,6 +61,19 @@ void chip8_system::init()
     m_CPU_SUBINSTR_0x8XXX_TABLE[0x7] = &chip8_system::cpu_sub_0x8XY7;
     m_CPU_SUBINSTR_0x8XXX_TABLE[0xE] = &chip8_system::cpu_sub_0x8XYE;
 
+    m_CPU_SUBINSTR_0xEXXX_TABLE[0x9E] = &chip8_system::cpu_sub_0xEX9E;
+    m_CPU_SUBINSTR_0xEXXX_TABLE[0xA1] = &chip8_system::cpu_sub_0xEXA1;
+
+    m_CPU_SUBINSTR_0xFXXX_TABLE[0x7] = &chip8_system::cpu_sub_0xFX07;
+    m_CPU_SUBINSTR_0xFXXX_TABLE[0xA] = &chip8_system::cpu_sub_0xFX0A;
+    m_CPU_SUBINSTR_0xFXXX_TABLE[0x15] = &chip8_system::cpu_sub_0xFX15;
+    m_CPU_SUBINSTR_0xFXXX_TABLE[0x18] = &chip8_system::cpu_sub_0xFX18;
+    m_CPU_SUBINSTR_0xFXXX_TABLE[0x1E] = &chip8_system::cpu_sub_0xFX1E;
+    m_CPU_SUBINSTR_0xFXXX_TABLE[0x29] = &chip8_system::cpu_sub_0xFX29;
+    m_CPU_SUBINSTR_0xFXXX_TABLE[0x33] = &chip8_system::cpu_sub_0xFX33;
+    m_CPU_SUBINSTR_0xFXXX_TABLE[0x55] = &chip8_system::cpu_sub_0xFX55;
+    m_CPU_SUBINSTR_0xFXXX_TABLE[0x65] = &chip8_system::cpu_sub_0xFX65;
+
     // INIT REGISTERS & FLAGS
     memset(m_V, 0x0, CHIP8_CPU_REGISTER_COUNT);
     m_pc = 0x200;
@@ -139,6 +152,7 @@ void chip8_system::setKeys()
 void chip8_system::cpu_0x0XXX() {
     utils::PRINT_CHIP8_LOG("0");
     (this->*m_CPU_SUBINSTR_0x0XXX_TABLE[m_opcode & 0x000F])();
+    m_pc += 2;
 }
 
 // 0x1NNN: Jumps to address at NNN
@@ -189,44 +203,64 @@ void chip8_system::cpu_0x6XXX() {
 
 // 0x7XNN: Adds NN to VX
 void chip8_system::cpu_0x7XXX() {
-    utils::PRINT_CHIP8_LOG("7");
     m_V[(m_opcode & 0x0F00) >> 8] += m_opcode & 0x00FF;
     m_pc += 2;
 }
 
 //
 void chip8_system::cpu_0x8XXX() {
-    utils::PRINT_CHIP8_LOG("8");
     (this->*m_CPU_SUBINSTR_0x8XXX_TABLE[m_opcode & 0x000F])();
     m_pc += 2;
 }
 
 void chip8_system::cpu_0x9XXX() {
-    utils::PRINT_CHIP8_LOG("9");
+    m_V[(m_opcode & 0x0F00) >> 8] == m_V[(m_opcode & 0x00F0) >> 4]
+    ? m_pc += 2
+    : m_pc += 4;
 }
 
 void chip8_system::cpu_0xAXXX() {
-    utils::PRINT_CHIP8_LOG("A");
+    m_I = m_opcode & 0x0FFF;
+    m_pc += 2;
 }
 
 void chip8_system::cpu_0xBXXX() {
-    utils::PRINT_CHIP8_LOG("B");
+    m_pc = (m_opcode & 0x0FFF) + m_V[0x0];
 }
 
 void chip8_system::cpu_0xCXXX() {
-    utils::PRINT_CHIP8_LOG("C");
+    m_V[(m_opcode & 0x0F00) >> 8] = (rand() % 0xFF) & (m_opcode & 0x00FF);
+    m_pc += 2;
 }
 
 void chip8_system::cpu_0xDXXX() {
-    utils::PRINT_CHIP8_LOG("D");
+    unsigned char x = m_V[m_opcode & 0x0F00 >> 8];
+    unsigned char y = m_V[m_opcode & 0x00F0 >> 4];
+    unsigned char height = m_opcode & 0x000F;
+    unsigned char pixel;
+    m_V[0xF] = 0;
+
+    for (int y_vector = 0; y_vector < height; ++y_vector) {
+        pixel = m_memory[m_I + y_vector];
+        for (int x_vector = 0; x_vector < 8; ++x_vector) {
+            if ((pixel & (0x80 >> x_vector)) != 0) {
+                if (m_gfx_buffer[x + x_vector + (y + y_vector) * 64] == 1) {
+                    m_V[0xF] = 1;
+                }
+                m_gfx_buffer[x + x_vector + (y + y_vector) * 64] ^= 1;
+            }
+        }
+    }
+    m_drawFlag = true;
+    m_pc += 2;
 }
 
 void chip8_system::cpu_0xEXXX() {
-    utils::PRINT_CHIP8_LOG("E");
+    (this->*m_CPU_SUBINSTR_0xEXXX_TABLE[m_opcode & 0x00FF])();
 }
 
 void chip8_system::cpu_0xFXXX() {
-    utils::PRINT_CHIP8_LOG("F");
+    (this->*m_CPU_SUBINSTR_0xFXXX_TABLE[m_opcode & 0x00FF])();
 }
 
 
@@ -236,48 +270,133 @@ void chip8_system::cpu_0xFXXX() {
 void chip8_system::cpu_sub_0x0000() {
     memset(m_gfx_buffer, 0x0, CHIP8_GFX_RESOLUTION);
     m_drawFlag = true;
-    m_pc += 2;
 }
 
 // 0x00EE: Return from subroutine
 void chip8_system::cpu_sub_0x000E() {
     m_stack_pointer -= 1;
     m_pc = m_stack[m_stack_pointer];
-    m_pc += 2;
 }
 
 void chip8_system::cpu_sub_0x8XY0() {
-    m_V[(m_opcode & 0x0F00 >> 8)] = (m_opcode & 0x00F0) >> 4;
+    m_V[(m_opcode & 0x0F00 >> 8)] = m_V[(m_opcode & 0x00F0) >> 4];
 }
 
 void chip8_system::cpu_sub_0x8XY1() {
-    m_V[(m_opcode & 0x0F00 >> 8)] = ((m_opcode & 0x0F00) >> 8) | ((m_opcode & 0x00F0) >> 4);
+    m_V[(m_opcode & 0x0F00 >> 8)] = m_V[((m_opcode & 0x0F00) >> 8)] | m_V[((m_opcode & 0x00F0) >> 4)];
 }
 
 void chip8_system::cpu_sub_0x8XY2() {
-    m_V[(m_opcode & 0x0F00 >> 8)] = ((m_opcode & 0x0F00) >> 8) & ((m_opcode & 0x00F0) >> 4);
+    m_V[(m_opcode & 0x0F00 >> 8)] = m_V[((m_opcode & 0x0F00) >> 8)] & m_V[((m_opcode & 0x00F0) >> 4)];
 }
 
 void chip8_system::cpu_sub_0x8XY3() {
-
+    m_V[(m_opcode & 0x0F00 >> 8)] = m_V[((m_opcode & 0x0F00) >> 8)] ^ m_V[((m_opcode & 0x00F0) >> 4)];
 }
 
 void chip8_system::cpu_sub_0x8XY4() {
-
+    m_V[(m_opcode & 0x00F0) >> 4] > (0xFF - m_V[(m_opcode & 0x0F00) >> 8])
+        ? m_V[0xF] = 1
+        : m_V[0xF] = 0;
+    m_V[(m_opcode & 0x0F00) >> 8] += m_V[(m_opcode & 0x00F0) >> 4];
 }
 
 void chip8_system::cpu_sub_0x8XY5() {
-
+    m_V[(m_opcode & 0x0F00) >> 8] < m_V[(m_opcode & 0x00F0) >> 4]
+        ? m_V[0xF] = 0
+        : m_V[0xF] = 1;
+    m_V[(m_opcode & 0x0F00) >> 8] -= m_V[(m_opcode & 0x00F0) >> 4];
 }
 
 void chip8_system::cpu_sub_0x8XY6() {
-
+    m_V[0xF] = m_V[(m_opcode & 0x0F00) >> 8] & 0x1;
+    m_V[(m_opcode & 0x0F00) >> 8] = m_V[(m_opcode & 0x00F0) >> 4] >> 1;
 }
 
 void chip8_system::cpu_sub_0x8XY7() {
-
+    m_V[(m_opcode & 0x00F0) >> 4] < m_V[(m_opcode & 0x0F00) >> 8]
+        ? m_V[0xF] = 0
+        : m_V[0xF] = 1;
+    m_V[(m_opcode & 0x0F00) >> 8] = m_V[(m_opcode & 0x00F0) >> 4] - m_V[(m_opcode & 0x0F00) >> 8];
 }
 
 void chip8_system::cpu_sub_0x8XYE() {
+    m_V[0xF] = m_V[(m_opcode & 0xF00) >> 8] >> 7;
+    m_V[(m_opcode & 0x0F00) >> 8] = m_V[(m_opcode & 0x00F0) >> 4] << 1;
+}
 
+void chip8_system::cpu_sub_0xEX9E() {
+    m_keyboard[m_V[m_opcode & 0x0F00 >> 8]] != 0
+        ? m_pc += 4
+        : m_pc += 2;
+}
+
+void chip8_system::cpu_sub_0xEXA1() {
+    m_keyboard[m_V[m_opcode & 0x0F00 >> 8]] == 0
+        ? m_pc += 4
+        : m_pc += 2;
+}
+
+
+void chip8_system::cpu_sub_0xFX07() {
+    m_V[m_opcode & 0x0F00 >> 8] = m_delay_timer;
+    m_pc += 2;
+}
+
+void chip8_system::cpu_sub_0xFX0A() {
+    bool keyPressed = false;
+
+    for (int i = 0; i < 16; ++i) {
+        if (m_keyboard[i] != 0) {
+            m_V[(m_opcode & 0x0F00) >> 8] = i;
+            keyPressed = true;
+        }
+    }
+
+    if (keyPressed) {
+        m_pc += 2;
+    }
+}
+
+void chip8_system::cpu_sub_0xFX15() {
+    m_delay_timer = m_V[(m_opcode & 0x0F00) >> 8];
+    m_pc += 2;
+}
+
+void chip8_system::cpu_sub_0xFX18() {
+    m_audio_timer = m_V[(m_opcode & 0x0F00) >> 8];
+    m_pc += 2;
+}
+
+void chip8_system::cpu_sub_0xFX1E() {
+    m_I += m_V[(m_opcode & 0x0F00) >> 8];
+    m_pc += 2;
+}
+
+void chip8_system::cpu_sub_0xFX29() {
+    m_I = m_V[(m_opcode & 0x0F00) >> 8] * 0x5;
+    m_pc += 2;
+}
+
+void chip8_system::cpu_sub_0xFX33() {
+    m_memory[m_I] = m_V[(m_opcode & 0x0F00) >> 8] / 100;
+    m_memory[m_I + 1] = (m_V[(m_opcode & 0x0F00) >> 8] / 10) % 10;
+    m_memory[m_I + 2] = (m_V[(m_opcode & 0x0F00) >> 8] % 100) % 10;
+    m_pc += 2;
+}
+
+void chip8_system::cpu_sub_0xFX55() {
+    for (int i = 0; i < ((m_opcode & 0x0F00) >> 8); ++i) {
+        m_memory[m_I + i] = m_V[i];
+    }
+    m_I += ((m_opcode & 0x0F00) >> 8) + 1;
+    m_pc += 2;
+}
+
+void chip8_system::cpu_sub_0xFX65() {
+    for (int i = 0; i < ((m_opcode & 0x0F00) >> 8); ++i) {
+        m_V[i] = m_memory[m_I + i];
+    }
+    m_I += ((m_opcode & 0x0F00) >> 8) + 1;
+    m_pc += 2;
 }
