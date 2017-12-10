@@ -2,12 +2,16 @@
 #include <chip8_system.h>
 #include <thread>
 #include "SDL.h"
+#include "renderer.h"
+
+const int SCREEN_FPS = 120;
+const int SCREEN_TICKS_PER_FRAME = 1000 / SCREEN_FPS;
 
 int main(int argc, char** argv) {
     chip8_system chip8;
 
-    // setup OpenGL here
-    // and input
+    std::unique_ptr<gpu_renderer> gRenderer = std::make_unique<gpu_renderer>();
+    gRenderer->init();
 
     chip8.init();
     chip8.load("roms/PONG");
@@ -18,13 +22,15 @@ int main(int argc, char** argv) {
 
         if (chip8.m_drawFlag)
         {
-            //renderFrame();
+            chip8.m_drawFlag = false;
+            gRenderer->updateFramebuffer(chip8.m_gfx_buffer);
         }
 
         chip8.setKeys();
 
         // TEMP SOLUTION! REPLACE LATER WITH OPENGL RENDERER
-        std::this_thread::sleep_for (std::chrono::milliseconds(16));
+        //std::this_thread::sleep_for (std::chrono::milliseconds(16));
+        SDL_Delay(SCREEN_TICKS_PER_FRAME);
     }
 
 

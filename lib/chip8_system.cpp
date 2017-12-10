@@ -139,6 +139,16 @@ void chip8_system::cpuCycle()
     std::cout << std::hex << m_opcode << std::endl;
     // OPCODE => JUMP TABLE => EXECUTE
     (this->*m_CPU_JUMP_TABLE[(m_opcode & 0xF000) >> 12])();
+
+    if (m_delay_timer > 0) {
+        m_delay_timer--;
+    }
+    if (m_audio_timer > 0) {
+        if (m_audio_timer == 1) {
+            // sound here
+        }
+        m_audio_timer--;
+    }
 }
 
 void chip8_system::setKeys()
@@ -166,7 +176,6 @@ void chip8_system::cpu_0x2XXX() {
     m_stack[m_stack_pointer] = m_pc;
     m_stack_pointer += 1;
     m_pc = m_opcode & 0x0FFF;
-    m_pc += 2;
 }
 
 // 0x3XNN: Skips the next instruction if VX equals NN. (Usually the next instruction is a jump to skip a code block)
@@ -180,9 +189,9 @@ void chip8_system::cpu_0x3XXX() {
 // 0x4XNN: Skips the next instruction if VX doesn't equal NN. (Usually the next instruction is a jump to skip a code block)
 void chip8_system::cpu_0x4XXX() {
     utils::PRINT_CHIP8_LOG("4");
-    m_V[(m_opcode & 0x0F00) >> 8] == (m_opcode & 0x00FF)
-        ? m_pc += 2
-        : m_pc += 4;
+    m_V[(m_opcode & 0x0F00) >> 8] != (m_opcode & 0x00FF)
+        ? m_pc += 4
+        : m_pc += 2;
 }
 
 // 0x5XY0: Skips the next instruction if VX equals VY. (Usually the next instruction is a jump to skip a code block)
@@ -233,20 +242,20 @@ void chip8_system::cpu_0xCXXX() {
 }
 
 void chip8_system::cpu_0xDXXX() {
-    unsigned char x = m_V[m_opcode & 0x0F00 >> 8];
-    unsigned char y = m_V[m_opcode & 0x00F0 >> 4];
+    unsigned char x = m_V[(m_opcode & 0x0F00) >> 8];
+    unsigned char y = m_V[(m_opcode & 0x00F0) >> 4];
     unsigned char height = m_opcode & 0x000F;
     unsigned char pixel;
     m_V[0xF] = 0;
 
-    for (int y_vector = 0; y_vector < height; ++y_vector) {
+    for (int y_vector = 0; y_vector < height; y_vector++) {
         pixel = m_memory[m_I + y_vector];
-        for (int x_vector = 0; x_vector < 8; ++x_vector) {
+        for (int x_vector = 0; x_vector < 8; x_vector++) {
             if ((pixel & (0x80 >> x_vector)) != 0) {
-                if (m_gfx_buffer[x + x_vector + (y + y_vector) * 64] == 1) {
+                if (m_gfx_buffer[x + x_vector + ((y + y_vector) * 64)] == 1) {
                     m_V[0xF] = 1;
                 }
-                m_gfx_buffer[x + x_vector + (y + y_vector) * 64] ^= 1;
+                m_gfx_buffer[x + x_vector + ((y + y_vector) * 64)] ^= 1;
             }
         }
     }
@@ -278,19 +287,19 @@ void chip8_system::cpu_sub_0x000E() {
 }
 
 void chip8_system::cpu_sub_0x8XY0() {
-    m_V[(m_opcode & 0x0F00 >> 8)] = m_V[(m_opcode & 0x00F0) >> 4];
+    m_V[(m_opcode & 0x0F00) >> 8] = m_V[(m_opcode & 0x00F0) >> 4];
 }
 
 void chip8_system::cpu_sub_0x8XY1() {
-    m_V[(m_opcode & 0x0F00 >> 8)] = m_V[((m_opcode & 0x0F00) >> 8)] | m_V[((m_opcode & 0x00F0) >> 4)];
+    m_V[(m_opcode & 0x0F00) >> 8] = m_V[(m_opcode & 0x0F00) >> 8] | m_V[(m_opcode & 0x00F0) >> 4];
 }
 
 void chip8_system::cpu_sub_0x8XY2() {
-    m_V[(m_opcode & 0x0F00 >> 8)] = m_V[((m_opcode & 0x0F00) >> 8)] & m_V[((m_opcode & 0x00F0) >> 4)];
+    m_V[(m_opcode & 0x0F00) >> 8] = m_V[(m_opcode & 0x0F00) >> 8] & m_V[(m_opcode & 0x00F0) >> 4];
 }
 
 void chip8_system::cpu_sub_0x8XY3() {
-    m_V[(m_opcode & 0x0F00 >> 8)] = m_V[((m_opcode & 0x0F00) >> 8)] ^ m_V[((m_opcode & 0x00F0) >> 4)];
+    m_V[(m_opcode & 0x0F00) >> 8] = m_V[(m_opcode & 0x0F00) >> 8] ^ m_V[(m_opcode & 0x00F0) >> 4];
 }
 
 void chip8_system::cpu_sub_0x8XY4() {
@@ -309,7 +318,7 @@ void chip8_system::cpu_sub_0x8XY5() {
 
 void chip8_system::cpu_sub_0x8XY6() {
     m_V[0xF] = m_V[(m_opcode & 0x0F00) >> 8] & 0x1;
-    m_V[(m_opcode & 0x0F00) >> 8] = m_V[(m_opcode & 0x00F0) >> 4] >> 1;
+    m_V[(m_opcode & 0x0F00) >> 8] = m_V[(m_opcode & 0x0F00) >> 8] >> 1;
 }
 
 void chip8_system::cpu_sub_0x8XY7() {
@@ -321,24 +330,24 @@ void chip8_system::cpu_sub_0x8XY7() {
 
 void chip8_system::cpu_sub_0x8XYE() {
     m_V[0xF] = m_V[(m_opcode & 0xF00) >> 8] >> 7;
-    m_V[(m_opcode & 0x0F00) >> 8] = m_V[(m_opcode & 0x00F0) >> 4] << 1;
+    m_V[(m_opcode & 0x0F00) >> 8] = m_V[(m_opcode & 0x0F00) >> 8] << 1;
 }
 
 void chip8_system::cpu_sub_0xEX9E() {
-    m_keyboard[m_V[m_opcode & 0x0F00 >> 8]] != 0
+    m_keyboard[m_V[(m_opcode & 0x0F00) >> 8]] != 0
         ? m_pc += 4
         : m_pc += 2;
 }
 
 void chip8_system::cpu_sub_0xEXA1() {
-    m_keyboard[m_V[m_opcode & 0x0F00 >> 8]] == 0
+    m_keyboard[m_V[(m_opcode & 0x0F00) >> 8]] == 0
         ? m_pc += 4
         : m_pc += 2;
 }
 
 
 void chip8_system::cpu_sub_0xFX07() {
-    m_V[m_opcode & 0x0F00 >> 8] = m_delay_timer;
+    m_V[(m_opcode & 0x0F00) >> 8] = m_delay_timer;
     m_pc += 2;
 }
 
@@ -368,6 +377,9 @@ void chip8_system::cpu_sub_0xFX18() {
 }
 
 void chip8_system::cpu_sub_0xFX1E() {
+    m_I + m_V[(m_opcode & 0x0F00) >> 8] > 0xFFF
+        ? m_V[0xF] = 1
+        : m_V[0xF] = 0;
     m_I += m_V[(m_opcode & 0x0F00) >> 8];
     m_pc += 2;
 }
@@ -385,7 +397,7 @@ void chip8_system::cpu_sub_0xFX33() {
 }
 
 void chip8_system::cpu_sub_0xFX55() {
-    for (int i = 0; i < ((m_opcode & 0x0F00) >> 8); ++i) {
+    for (int i = 0; i <= ((m_opcode & 0x0F00) >> 8); ++i) {
         m_memory[m_I + i] = m_V[i];
     }
     m_I += ((m_opcode & 0x0F00) >> 8) + 1;
@@ -393,7 +405,7 @@ void chip8_system::cpu_sub_0xFX55() {
 }
 
 void chip8_system::cpu_sub_0xFX65() {
-    for (int i = 0; i < ((m_opcode & 0x0F00) >> 8); ++i) {
+    for (int i = 0; i <= ((m_opcode & 0x0F00) >> 8); ++i) {
         m_V[i] = m_memory[m_I + i];
     }
     m_I += ((m_opcode & 0x0F00) >> 8) + 1;
