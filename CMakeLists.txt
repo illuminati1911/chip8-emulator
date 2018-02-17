@@ -14,6 +14,3 @@ include_directories(./include)
 add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(test)
-
-#set(SOURCE_FILES main.cpp)
-#add_executable(chip8_emulator ${SOURCE_FILES})
